@@ -3,6 +3,7 @@ node_modules/
 prover/node_modules/
 
 # Build output
+prover/dist/
 dist/
 circuit/target/
 .circuit/
