@@ -1,10 +1,10 @@
 {
-  "income": 75000,
-  "debtRatio": 0.3,
-  "savings": 25,
-  "employmentYears": 8,
-  "creditHistoryMonths": 60,
-  "loanAmount": 50,
-  "interestRate": 5.5,
-  "riskScore": 0.3
+  "income": 0.375,
+  "debtRatio": 0.15,
+  "savings": 0.12,
+  "employmentYears": 0.4,
+  "creditHistoryMonths": 0.35,
+  "loanAmount": 0.2,
+  "interestRate": 0.4,
+  "riskScore": 0.15
 }
