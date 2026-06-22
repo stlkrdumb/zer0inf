@@ -1,0 +1,4 @@
+[package]
+name = "zer0inf"
+type = "bin"
+authors = [""]

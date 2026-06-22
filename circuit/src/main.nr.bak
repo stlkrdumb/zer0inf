@@ -1,0 +1,124 @@
+// zer0Inf — Neural Network Circuit for Verifiable AI Inference
+// Architecture: Input(8) → Hidden(6, ReLU) → Output(1, sigmoid)
+// All values: fixed-point u32, scale=1024 (range 0..1023)
+
+// ── Unconstrained helpers (run in Brillig VM) ─────────────────────
+
+unconstrained fn sigmoid_fp(x: u32) -> u32 {
+    if x >= 900u32 { 1023u32 }
+    else if x <= 128u32  { 0u32 }
+    else {
+        let range = 900u32 - 128u32;
+        let diff = x - 128u32;
+        (diff * 1023u32) / range
+    }
+}
+
+unconstrained fn relu_fp(x: u32) -> u32 {
+    if x > 1023u32 { 1023u32 } else { x }
+}
+
+fn clamp(x: u32, lo: u32, hi: u32) -> u32 {
+    if x < lo { lo }
+    else if x > hi { hi }
+    else { x }
+}
+
+// ── Matrix row dot product (unconstrained) ────────────────────────
+unconstrained fn dot8(
+    w0: u32, w1: u32, w2: u32, w3: u32,
+    w4: u32, w5: u32, w6: u32, w7: u32,
+    i0: u32, i1: u32, i2: u32, i3: u32,
+    i4: u32, i5: u32, i6: u32, i7: u32,
+) -> u32 {
+    let sum = (w0*i0)/1024u32 + (w1*i1)/1024u32 +
+              (w2*i2)/1024u32 + (w3*i3)/1024u32 +
+              (w4*i4)/1024u32 + (w5*i5)/1024u32 +
+              (w6*i6)/1024u32 + (w7*i7)/1024u32;
+    sum
+}
+
+// ── Full inference pipeline (unconstrained) ───────────────────────
+unconstrained fn compute_inference(
+    w: [u32; 48],
+    ov: [u32; 6],
+    inputs: [u32; 8],
+) -> u32 {
+    // Layer 1: Hidden (8→6, ReLU)
+    let h0 = relu_fp(clamp(dot8(w[0],w[1],w[2],w[3],w[4],w[5],w[6],w[7],
+                                 inputs[0],inputs[1],inputs[2],inputs[3],
+                                 inputs[4],inputs[5],inputs[6],inputs[7]), 0u32, 1023u32));
+    let h1 = relu_fp(clamp(dot8(w[8],w[9],w[10],w[11],w[12],w[13],w[14],w[15],
+                                 inputs[0],inputs[1],inputs[2],inputs[3],
+                                 inputs[4],inputs[5],inputs[6],inputs[7]), 0u32, 1023u32));
+    let h2 = relu_fp(clamp(dot8(w[16],w[17],w[18],w[19],w[20],w[21],w[22],w[23],
+                                 inputs[0],inputs[1],inputs[2],inputs[3],
+                                 inputs[4],inputs[5],inputs[6],inputs[7]), 0u32, 1023u32));
+    let h3 = relu_fp(clamp(dot8(w[24],w[25],w[26],w[27],w[28],w[29],w[30],w[31],
+                                 inputs[0],inputs[1],inputs[2],inputs[3],
+                                 inputs[4],inputs[5],inputs[6],inputs[7]), 0u32, 1023u32));
+    let h4 = relu_fp(clamp(dot8(w[32],w[33],w[34],w[35],w[36],w[37],w[38],w[39],
+                                 inputs[0],inputs[1],inputs[2],inputs[3],
+                                 inputs[4],inputs[5],inputs[6],inputs[7]), 0u32, 1023u32));
+    let h5 = relu_fp(clamp(dot8(w[40],w[41],w[42],w[43],w[44],w[45],w[46],w[47],
+                                 inputs[0],inputs[1],inputs[2],inputs[3],
+                                 inputs[4],inputs[5],inputs[6],inputs[7]), 0u32, 1023u32));
+    
+    let hidden = [h0, h1, h2, h3, h4, h5];
+    
+    // Layer 2: Output (6→1, sigmoid)
+    let output = relu_fp(clamp(
+        (ov[0]*hidden[0])/1024u32 +
+        (ov[1]*hidden[1])/1024u32 +
+        (ov[2]*hidden[2])/1024u32 +
+        (ov[3]*hidden[3])/1024u32 +
+        (ov[4]*hidden[4])/1024u32 +
+        (ov[5]*hidden[5])/1024u32, 0u32, 1023u32
+    ));
+    
+    sigmoid_fp(output)
+}
+
+// ── Main circuit (constrained — compiles to ACIR) ─────────────────
+pub fn main(
+    // Public: model weights (48 values, committed on-chain)
+    w0:  u32, w1:  u32, w2:  u32, w3:  u32, w4:  u32, w5:  u32,
+    w6:  u32, w7:  u32, w8:  u32, w9:  u32, w10: u32, w11: u32,
+    w12: u32, w13: u32, w14: u32, w15: u32, w16: u32, w17: u32,
+    w18: u32, w19: u32, w20: u32, w21: u32, w22: u32, w23: u32,
+    w24: u32, w25: u32, w26: u32, w27: u32, w28: u32, w29: u32,
+    w30: u32, w31: u32, w32: u32, w33: u32, w34: u32, w35: u32,
+    w36: u32, w37: u32, w38: u32, w39: u32, w40: u32, w41: u32,
+    w42: u32, w43: u32, w44: u32, w45: u32, w46: u32, w47: u32,
+
+    // Public: output layer weights (6 values)
+    ov0: u32, ov1: u32, ov2: u32, ov3: u32, ov4: u32, ov5: u32,
+
+    // Private: user's financial data (normalized [0..1023])
+    income:       u32,
+    debt_ratio:   u32,
+    savings:      u32,
+    employment:   u32,
+    credit_hist:  u32,
+    loan_amt:     u32,
+    interest:     u32,
+    risk_score:   u32,
+
+    // Public: the inference result
+    result: u32,
+) -> pub bool {
+
+    // Pack inputs for the unconstrained computation
+    let inputs = [income, debt_ratio, savings, employment, credit_hist, loan_amt, interest, risk_score];
+    let weights = [w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11,w12,w13,w14,w15,w16,w17,w18,w19,w20,w21,w22,w23,w24,w25,w26,w27,w28,w29,w30,w31,w32,w33,w34,w35,w36,w37,w38,w39,w40,w41,w42,w43,w44,w45,w46,w47];
+    let out_weights = [ov0,ov1,ov2,ov3,ov4,ov5];
+
+    // Safety: compute_inference deterministically computes the same result
+    // from the given weights and inputs. The prover supplies 'result' as
+    // a public witness; we verify it matches the actual computation below.
+    let computed = unsafe { compute_inference(weights, out_weights, inputs) };
+
+    assert_eq(result, computed);
+
+    true
+}

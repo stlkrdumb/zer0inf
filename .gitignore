@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+prover/node_modules/
+
+# Build output
+dist/
+circuit/target/
+.circuit/
+contract/target/
+
+# Environment (contains secret keys!)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Proof artifacts (large binary files)
+*.bin
+*.pk
+*.vk
+
+# Runtime outputs
+prover/output/*.json
+prover/output/contract-id.txt
+prover/output/model.json
+prover/output/proof.json
+prover/output/contract-config.json
+
+# Test scripts (temporary)
+deploy-*.cjs
+check-account.*
+test-*.*
+deploy-sdk.cjs
+
+# Stellar CLI identity (contains secret keys!)
+.stellar/
+config.toml

@@ -1,0 +1,29 @@
+{
+  "name": "zer0inf",
+  "version": "0.1.0",
+  "description": "Zero-knowledge proof of correct AI inference on Stellar Soroban",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "prover",
+    "contract"
+  ],
+  "scripts": {
+    "build:all": "npm run build --workspace=zer0inf-prover && cargo build --manifest-path=./contract/Cargo.toml",
+    "test:all": "npm run test --workspace=zer0inf-prover",
+    "stellar": "npx @stellar/stellar-cli",
+    "demo": "echo '=== Zer0Inf Demo ===' && rm -f output/*.json && echo '' && node prover/dist/cli/index.js register data/sample-weights.json --description 'Demo Credit Model' && echo '' && node prover/dist/cli/index.js infer && echo '' && node prover/dist/cli/index.js verify --proof output/proof.json && echo '' && node prover/dist/cli/index.js status"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "zero-knowledge",
+    "zkml",
+    "stellar",
+    "soroban",
+    "machine-learning",
+    "privacy"
+  ],
+  "license": "MIT"
+}
