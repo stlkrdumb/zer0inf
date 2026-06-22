@@ -10,12 +10,16 @@ import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import crypto from 'node:crypto';
 
-// resolveProjectRoot(): Find project root by going up from this module.
-// generate.ts compiles to prover/dist/proof/generate.js → need 3 levels up for project root
-function resolvePath(relative: string): string {
+function getProjectRoot(): string {
+  // Try 3-level upward walk from this module's directory:
+  // proof/ → dist/ → prover/ → project root
   const modDir = dirname(new URL(import.meta.url).pathname);
-  // Go up: proof → dist → prover → project (3 levels)
-  return join(modDir, '../..', relative);
+  const candidate = join(modDir, '../..', '..');
+  if (existsSync(join(candidate, 'circuit', 'Nargo.toml'))) {
+    return candidate;
+  }
+  // Fallback: use CWD (works when invoked from project root)
+  return process.cwd();
 }
 
 const PROOF_DIR = dirname(new URL(import.meta.url).pathname);
@@ -31,7 +35,7 @@ function modUrl(pkg: string): string {
   return pathToFileURL(join(PROOF_DIR, '../..', pkg)).href;
 }
 
-const PROJECT_ROOT = resolvePath('..');
+const PROJECT_ROOT = getProjectRoot();
 const PROVER_NODE_MODULES = join(PROJECT_ROOT, 'prover', 'node_modules');
 const CIRCUIT_DIR = join(PROJECT_ROOT, 'circuit');
 const TARGET_DIR = join(CIRCUIT_DIR, 'target');
@@ -94,7 +98,10 @@ async function ensureCompiled(nargoBin?: string): Promise<void> {
     try {
       execFileSync(target, ['compile'], { cwd: CIRCUIT_DIR, stdio: 'inherit' });
     } catch {
-      throw new Error('Failed to compile circuit. Run: cd circuit && nargo compile');
+      throw new Error(
+        `Failed to compile circuit. Circuit dir: ${CIRCUIT_DIR}\n` +
+          'Run: cd circuit && nargo compile',
+      );
     }
   }
 }
