@@ -1,0 +1,10 @@
+{
+  "income": 0.125,
+  "debtRatio": 0.85,
+  "savings": 0.02,
+  "employmentYears": 0.13,
+  "creditHistoryMonths": 0.04,
+  "loanAmount": 0.9,
+  "interestRate": 0.76,
+  "riskScore": 0.85
+}
