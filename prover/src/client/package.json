@@ -1,5 +1,5 @@
 {
-  "name": "zer0inf",
+  "name": "@zer0inf/contract-client",
   "version": "0.0.1",
   "description": "Generated TypeScript bindings for zer0inf Stellar contract",
   "type": "module",

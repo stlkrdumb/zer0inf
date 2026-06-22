@@ -27,11 +27,8 @@ Thumbs.db
 *.vk
 
 # Runtime outputs
-prover/output/*.json
-prover/output/contract-id.txt
-prover/output/model.json
-prover/output/proof.json
-prover/output/contract-config.json
+output/*.json
+output/*.txt
 
 # Test scripts (temporary)
 deploy-*.cjs
