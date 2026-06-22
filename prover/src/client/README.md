@@ -33,7 +33,7 @@ const client = new Client({
 
 - `src/index.ts` - Entry point exporting the Client
 - `src/types.ts` - Type definitions for contract structs, enums, and unions
-- `src/contract.ts` - Client implementation
+- `src/client.ts` - Client implementation
 - `tsconfig.json` - TypeScript configuration
 - `package.json` - NPM package configuration
 
