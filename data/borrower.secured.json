@@ -1,0 +1,11 @@
+{
+  "description": "Secured loan applicant — moderate income but strong collateral (low LTV)",
+  "income": 0.35,
+  "debtRatio": 0.30,
+  "savings": 0.20,
+  "employmentYears": 0.45,
+  "creditHistoryMonths": 0.50,
+  "loanAmount": 0.35,
+  "interestRate": 0.25,
+  "riskScore": 0.30
+}

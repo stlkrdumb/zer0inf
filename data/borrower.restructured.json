@@ -1,0 +1,11 @@
+{
+  "description": "Previously defaulted — improving profile, restructuring request",
+  "income": 0.30,
+  "debtRatio": 0.45,
+  "savings": 0.15,
+  "employmentYears": 0.50,
+  "creditHistoryMonths": 0.20,
+  "loanAmount": 0.40,
+  "interestRate": 0.60,
+  "riskScore": 0.40
+}

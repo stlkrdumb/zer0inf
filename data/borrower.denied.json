@@ -1,0 +1,11 @@
+{
+  "description": "High-risk borrower — low income, high debt, minimal savings, poor credit",
+  "income": 0.10,
+  "debtRatio": 0.85,
+  "savings": 0.02,
+  "employmentYears": 0.10,
+  "creditHistoryMonths": 0.05,
+  "loanAmount": 0.90,
+  "interestRate": 0.85,
+  "riskScore": 0.85
+}

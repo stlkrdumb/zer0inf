@@ -1,0 +1,11 @@
+{
+  "description": "Strong borrower — stable income, low debt, good savings and credit history",
+  "income": 0.75,
+  "debtRatio": 0.15,
+  "savings": 0.40,
+  "employmentYears": 0.60,
+  "creditHistoryMonths": 0.70,
+  "loanAmount": 0.20,
+  "interestRate": 0.30,
+  "riskScore": 0.15
+}

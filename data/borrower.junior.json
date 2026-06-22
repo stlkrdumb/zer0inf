@@ -1,0 +1,11 @@
+{
+  "description": "Junior borrower — low income but stable employment, needs first credit line",
+  "income": 0.20,
+  "debtRatio": 0.10,
+  "savings": 0.05,
+  "employmentYears": 0.25,
+  "creditHistoryMonths": 0.08,
+  "loanAmount": 0.30,
+  "interestRate": 0.40,
+  "riskScore": 0.35
+}

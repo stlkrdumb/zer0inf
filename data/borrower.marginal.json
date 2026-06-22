@@ -1,0 +1,11 @@
+{
+  "description": "Borderline case — decent income but high loan-to-income and moderate risk",
+  "income": 0.40,
+  "debtRatio": 0.50,
+  "savings": 0.10,
+  "employmentYears": 0.30,
+  "creditHistoryMonths": 0.25,
+  "loanAmount": 0.65,
+  "interestRate": 0.55,
+  "riskScore": 0.50
+}

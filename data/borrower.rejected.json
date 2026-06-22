@@ -1,0 +1,11 @@
+{
+  "description": "Too risky — high debt relative to income, no savings, short credit history",
+  "income": 0.25,
+  "debtRatio": 0.70,
+  "savings": 0.03,
+  "employmentYears": 0.08,
+  "creditHistoryMonths": 0.02,
+  "loanAmount": 0.80,
+  "interestRate": 0.90,
+  "riskScore": 0.75
+}
