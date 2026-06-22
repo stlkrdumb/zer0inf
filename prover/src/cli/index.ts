@@ -11,6 +11,7 @@ import crypto from 'node:crypto';
 import { proveInference } from '../proof/generate.js';
 import { submitInference, getConfig } from '../onchain/index.js';
 import type { InferInput, InferenceResult } from '../types/index.js';
+import { DEFAULT_HORIZON_URL, DEFAULT_RPC_URL } from '../types/index.js';
 import { Keypair } from '@stellar/stellar-sdk';
 
 // ── CLI Argument Parsing ───────────────────────────────────────────
@@ -341,7 +342,7 @@ async function cmdSubmit(args: CLIArgs): Promise<void> {
 
     console.log(`\n[zer0inf] Done! Inference #${resultData.inferenceId} submitted.`);
     console.log(`  Tx hash: ${resultData.transactionHash}`);
-    console.log(`  Explorer: https://testnet.stellar.org/transactions/${resultData.transactionHash}`);
+    console.log(`  Explorer: ${DEFAULT_HORIZON_URL}/transactions/${resultData.transactionHash}`);
 
   } catch (err) {
     console.error('[zer0inf] Submission failed:', err instanceof Error ? err.message : String(err));
@@ -376,7 +377,7 @@ async function cmdDeploy(args: CLIArgs): Promise<void> {
       console.log(`  Contract ID: ${readFileSync(idFile, 'utf-8').trim()}`);
       const kp = Keypair.fromSecret(config.secret);
       console.log(`  Account:     ${kp.publicKey()}`);
-      console.log(`  RPC:         ${config.rpcUrl || 'https://soroban-testnet.stellar.org'}`);
+      console.log(`  RPC:         ${config.rpcUrl || DEFAULT_RPC_URL}`);
       console.log(`${'─'.repeat(50)}`);
     } else {
       console.log('\nTo deploy, use:');

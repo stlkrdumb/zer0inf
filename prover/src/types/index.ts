@@ -112,3 +112,17 @@ export const TESTNET: StellarConfig = {
   horizonUrl: 'https://testnet.stellar.org',
   networkPassphrase: 'Test SDF Network ; September 2015',
 };
+
+// ── Centralized Stellar Config ───────────────────────────────────────
+/** Single source of truth for network URLs. Add new networks here.
+ *  Usage: DEFAULT_RPC_URL, DEFAULT_HORIZON_URL from elsewhere.
+ */
+export const STELLAR_CONFIG = {
+  TESTNET: {
+    rpcUrl: 'https://soroban-testnet.stellar.org',
+    horizonUrl: 'https://testnet.stellar.org',
+  },
+} as const;
+
+export const DEFAULT_RPC_URL = STELLAR_CONFIG.TESTNET.rpcUrl;
+export const DEFAULT_HORIZON_URL = STELLAR_CONFIG.TESTNET.horizonUrl;

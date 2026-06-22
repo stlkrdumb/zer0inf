@@ -8,6 +8,7 @@ import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import crypto from 'node:crypto';
 import { Networks, Keypair, contract } from '@stellar/stellar-sdk';
+import { DEFAULT_RPC_URL, DEFAULT_HORIZON_URL } from '../types/index.js';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ export function getConfig(opts?: {
   return {
     secret: opts?.secret || process.env.STELLAR_SECRET || '',
     contractId: opts?.contractId || process.env.STELLAR_CONTRACT_ID || '',
-    rpcUrl: opts?.rpcUrl || process.env.STELLAR_RPC || 'https://soroban-testnet.stellar.org',
+    rpcUrl: opts?.rpcUrl || process.env.STELLAR_RPC || DEFAULT_RPC_URL,
   };
 }
 
@@ -73,7 +74,7 @@ async function createClient(config: OnchainConfig) {
   return new Client({
     contractId: config.contractId!,
     networkPassphrase: Networks.TESTNET,
-    rpcUrl: config.rpcUrl || 'https://soroban-testnet.stellar.org',
+    rpcUrl: config.rpcUrl || DEFAULT_RPC_URL,
     publicKey: kp.publicKey(),
     signTransaction,
   });
@@ -108,7 +109,7 @@ export async function registerModel(
   console.log(`[zer0inf] ✓ Model registered!`);
   const txHash = sent.sendTransactionResponse?.hash || '';
   console.log(`[zer0inf] Tx hash: ${txHash}`);
-  console.log(`[zer0inf] Explorer: https://testnet.stellar.org/transactions/${txHash}`);
+  console.log(`[zer0inf] Explorer: ${DEFAULT_HORIZON_URL}/transactions/${txHash}`);
 
   // Save contract ID
   const idPath = join(process.cwd(), 'output', 'contract-id.txt');
@@ -152,7 +153,7 @@ export async function submitInference(
   console.log(`[zer0inf] ✓ Transaction confirmed!`);
   const submitTxHash = sent.sendTransactionResponse?.hash || '';
   console.log(`[zer0inf] Tx hash: ${submitTxHash}`);
-  console.log(`[zer0inf] Explorer: https://testnet.stellar.org/transactions/${submitTxHash}`);
+  console.log(`[zer0inf] Explorer: ${DEFAULT_HORIZON_URL}/transactions/${submitTxHash}`);
 
   // Save contract ID for future use
   const idPath = join(process.cwd(), 'output', 'contract-id.txt');
