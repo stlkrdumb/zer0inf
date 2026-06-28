@@ -71,13 +71,12 @@ echo "   (Full hex: ${#VK_HEX} characters)"
 # Note: stellar contract deploy (singular, not 'contracts')
 # Note: constructor args go after '--' separator
 # Note: --network-passphrase required when using --rpc-url
-DEPLOY_OUTPUT=$(stellar contract deploy \
-    --network testnet \
-    --source "$STELLAR_SECRET" \
-    --rpc-url "$STELLAR_RPC" \
-    --network-passphrase "Test SDF Network ; September 2015" \
-    --wasm "$CONTRACT_DIR/target/wasm32v1-none/release/zer0inf_contract.wasm" \
-    -- "bytes:$VK_HEX" 2>&1)
+DEPLOY_OUTPUT=$(stellar contract deploy --network testnet \
+  --source-account "$STELLAR_SECRET" \
+  --rpc-url "$STELLAR_RPC" \
+  --network-passphrase "Test SDF Network ; September 2015" \
+  --wasm "$CONTRACT_DIR/target/wasm32v1-none/release/zer0inf_contract.wasm" \
+  -- --vk-bytes "$VK_HEX" 2>&1)
 
 echo "$DEPLOY_OUTPUT"
 
@@ -138,8 +137,8 @@ echo ""
 echo "✅ Pipeline test complete!"
 echo ""
 echo "📊 Verify on-chain:"
-echo "   Model count: $(stellar contract invoke --id $NEW_CONTRACT_ID --network testnet --source $STELLAR_SECRET --send no -- get_model_count 2>/dev/null || echo 'N/A')"
-echo "   List models: $(stellar contract invoke --id $NEW_CONTRACT_ID --network testnet --source $STELLAR_SECRET --send no -- list_models 2>/dev/null || echo 'N/A')"
+echo "   Model count: $(stellar contract invoke --id $NEW_CONTRACT_ID --network testnet --source-account $STELLAR_SECRET --send no -- get_model_count 2>/dev/null || echo 'N/A')"
+echo "   List models: $(stellar contract invoke --id $NEW_CONTRACT_ID --network testnet --source-account $STELLAR_SECRET --send no -- list_models 2>/dev/null || echo 'N/A')"
 echo ""
 echo "🔗 Explorer: https://stellar.expert/explorer/testnet/account/$STELLAR_SECRET"
 echo ""
