@@ -2,8 +2,8 @@
 
 ## ✅ Successfully Deployed to Stellar Testnet
 
-**Contract ID:** `CCATLOJE5E4D5LKSD5ZVVGNLIK42CMOY2DJ65MRF7PFRBKEUAPHQ4B2X`  
-**Transaction:** https://stellar.expert/explorer/testnet/tx/68de3cc4e663577e8a6d72e6ef8d4e10e144a9b65acc91b3eea62573214de7c3
+**Contract ID:** `CDKUQW3GWRG47F5DR3SXT2SKBBGIIF7XZNMNNE64IXAEVI4PHUXTZB4B`  
+**Transaction:** https://stellar.expert/explorer/testnet/tx/71d42a32d717dbff63c59b45bd8987025a6556e5124ab4f4a3a29e7f2819f202
 
 ---
 
@@ -34,16 +34,16 @@
 ### 4. On-Chain Queries ✅
 ```bash
 # Get model count
-$ stellar contract invoke --id CCATLOJE... -- get_model_count
-2
+$ stellar contract invoke --id CDKUQW3GWRG47F5DR3SXT2SKBBGIIF7XZNMNNE64IXAEVI4PHUXTZB4B ... -- get_model_count
+1
 
 # List models
-$ stellar contract invoke --id CCATLOJE... -- list_models
-[0,1]
+$ stellar contract invoke --id CDKUQW3GWRG47F5DR3SXT2SKBBGIIF7XZNMNNE64IXAEVI4PHUXTZB4B ... -- list_models
+[0]
 
 # Get model details
-$ stellar contract invoke --id CCATLOJE... -- get_model --model_id 0
-["0bf51600a5a9f4e0c2d6e875568df6639fdbea831ced083a2340d91388208a34","Credit Eligibility Model v1",1]
+$ stellar contract invoke --id CDKUQW3GWRG47F5DR3SXT2SKBBGIIF7XZNMNNE64IXAEVI4PHUXTZB4B ... -- get_model --model_id 0
+["084906f7f588fa500815c421cee70a003a471cc75663e4c2a120b219a14ee77d","Credit Eligibility Model v1",1]
 ```
 
 ---
@@ -55,8 +55,8 @@ $ stellar contract invoke --id CCATLOJE... -- get_model --model_id 0
 **Fix:** Updated script to use singular form
 
 ### Issue 2: Constructor Arguments
-**Problem:** `--constructor-arg bytes:...` not recognized  
-**Fix:** Use `-- "bytes:$VK_HEX"` (args after `--`)
+**Problem:** `--constructor-arg bytes:...` not recognized / xdr value invalid errors  
+**Fix:** Use `-- --vk-bytes $VK_HEX` without quotes (quotes cause literal strings to be parsed as hex causing XDR errors). Ensure dashes are used, not underscores (`--vk_bytes` fails).
 
 ### Issue 3: Network Passphrase
 **Problem:** Missing network passphrase for testnet  
@@ -81,40 +81,8 @@ $ stellar contract invoke --id CCATLOJE... -- get_model --model_id 0
 | Deploy to testnet | ✅ | Contract ID saved |
 | Register model | ✅ | Model #0 registered |
 | Generate proof | ✅ | 14.5 KB UltraHonk proof |
-| Submit inference | ⚠️ | CLI fix needed (SDK v27 API) |
+| Submit inference | ✅ | Working with correct arguments |
 | Query results | ✅ | All queries working |
-
----
-
-## 📝 Next Steps
-
-### Immediate (Fix Submission)
-The submit command has a type mismatch with Soroban SDK v27. The contract is ready to accept submissions — we just need to update the client bindings or use the CLI directly:
-
-```bash
-# Direct submission via CLI (bypasses TypeScript client)
-stellar contract invoke \
-  --id CCATLOJE5E4D5LKSD5ZVVGNLIK42CMOY2DJ65MRF7PFRBKEUAPHQ4B2X \
-  --network testnet \
-  --source <your_secret> \
-  --submit_inference \
-  --caller <your_address> \
-  --model_id 0 \
-  --proof_bytes <hex> \
-  --public_inputs <hex> \
-  --decision true \
-  --confidence 501 \
-  --send yes
-```
-
-### Demo Video
-Record using the transcript at:
-`/home/rai/Documents/Obsidian Vault/00 ME/Zer0Inf Demo Video Transcript.md`
-
-### Submission
-- **Deadline:** June 29, 2026 19:00 UTC
-- **Platform:** https://dorahacks.io/hackathon/stellar-hacks-zk
-- **Prize:** $10,000 XLM (1st = $5,000)
 
 ---
 
@@ -125,9 +93,6 @@ Record using the transcript at:
 ✅ **ZK proofs generated and verified**  
 ✅ **On-chain queries working**  
 ✅ **Events emitted on registration**  
+✅ **Submit command fully working**  
 
-⚠️ **Submit command needs SDK v27 client update** (contract is ready to accept submissions)
-
----
-
-**The core pipeline works!** The contract is live, models are registered, proofs are generated, and queries work. Just need to fix the TypeScript client binding for submissions.
+**The core pipeline works!** The contract is live, models are registered, proofs are generated, verified, and submitted. Everything is ready for the hackathon.

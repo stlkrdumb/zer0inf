@@ -97,19 +97,22 @@ cp .env.example .env
 **Manual deploy:**
 ```bash
 # Export VK from circuit
-node prover/dist/cli/commands/export-vk.js
+node prover/dist/cli/index.js export-vk
 
 # Deploy contract with embedded VK
-stellar contracts deploy \
-  --wasm contract/target/wasm32-unknown-unknown/release/zer0inf_contract.wasm \
-  --constructor-arg "bytes:<vk_hex>" \
-  --network testnet --source <your_secret>
+VK_HEX=$(cat output/verification_key.hex)
 
-# Submit inference with on-chain verification
+stellar contract deploy \
+  --wasm contract/target/wasm32v1-none/release/zer0inf_contract.wasm \
+  --network testnet \
+  --source-account $STELLAR_SECRET \
+  -- --vk-bytes $VK_HEX
+
+# Note the contract ID, then submit inference with on-chain verification
 node prover/dist/cli/index.js submit \
   --proof output/proof.json \
   --contract-id <contract_id> \
-  --secret <your_key>
+  --secret $STELLAR_SECRET
 ```
 ```
 
@@ -117,7 +120,7 @@ node prover/dist/cli/index.js submit \
 
 - **Node.js** ≥ 20
 - **Noir** — `noirup -v 1.0.0-beta.22` or `cargo install --git https://github.com/noir-lang/noir nargo`
-- **Stellar CLI** — `cargo install --locked stellar-cli@^3.2.0`
+- **Stellar CLI** — `stellar-cli` (v22.5.0 or later)
 - **Rust toolchain** with WASM target — `rustup target add wasm32v1-none`
 - **Barretenberg** (for VK extraction) — `bbup -v 0.87.0`
 
@@ -138,14 +141,16 @@ node prover/dist/cli/index.js infer
 node prover/dist/cli/index.js verify --proof output/proof.json
 
 # Extract verification key (one-time, for on-chain deployment)
-node prover/dist/cli/commands/export-vk.js
+node prover/dist/cli/index.js export-vk
 # → saves output/verification_key.bin (3,680 bytes)
 
 # Deploy contract with embedded VK
+VK_HEX=$(cat output/verification_key.hex)
 stellar contract deploy \
   --wasm contract/target/wasm32v1-none/release/zer0inf_contract.wasm \
-  --constructor-arg <vk_hex> \
-  --network testnet --source alice
+  --network testnet \
+  --source-account $STELLAR_SECRET \
+  -- --vk-bytes $VK_HEX
 
 # Submit inference with on-chain verification
 node prover/dist/cli/index.js submit --proof output/proof.json \

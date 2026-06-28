@@ -18,7 +18,10 @@ export async function cmdDeploy(args: CLIArgs): Promise<void> {
     const config = getConfig({ secret: opts['secret'] as string });
     
     // Find WASM path
-    const wasmPath = join(process.cwd(), 'contract', 'target', 'wasm32-unknown-unknown', 'release', 'zer0inf_contract.wasm');
+    let wasmPath = join(process.cwd(), 'contract', 'target', 'wasm32v1-none', 'release', 'zer0inf_contract.wasm');
+    if (!existsSync(wasmPath)) {
+      wasmPath = join(process.cwd(), 'contract', 'target', 'wasm32-unknown-unknown', 'release', 'zer0inf_contract.wasm');
+    }
     
     if (!existsSync(wasmPath)) {
       console.error('Error: Contract WASM not found.');
