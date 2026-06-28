@@ -76,7 +76,7 @@ DEPLOY_OUTPUT=$(stellar contract deploy --network testnet \
   --rpc-url "$STELLAR_RPC" \
   --network-passphrase "Test SDF Network ; September 2015" \
   --wasm "$CONTRACT_DIR/target/wasm32v1-none/release/zer0inf_contract.wasm" \
-  -- --vk-bytes "$VK_HEX" 2>&1)
+  -- --vk-bytes $VK_HEX 2>&1)
 
 echo "$DEPLOY_OUTPUT"
 
