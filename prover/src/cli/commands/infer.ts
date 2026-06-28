@@ -26,15 +26,17 @@ export async function cmdInfer(args: CLIArgs): Promise<void> {
   // Load or generate weights
   let weights: number[];
   let outputWeights: number[];
-  const weightsPath = opts['weights_path'] as string;
+  const weightsPath = (opts['weights'] || opts['weights_path']) as string;
   if (weightsPath) {
     const wd = loadJSON<{ weights: number[]; output_weights: number[] }>(weightsPath);
     weights = wd.weights;
     outputWeights = wd.output_weights;
+    console.log(`[zer0inf] Loaded weights from ${weightsPath}`);
   } else {
     const { weights: w, outputWeights: ow } = generateRandomWeights();
     weights = w;
     outputWeights = ow;
+    console.log(`[zer0inf] Using random weights (results will vary)`);
   }
 
   // Run full pipeline: inference + ZK proof generation
