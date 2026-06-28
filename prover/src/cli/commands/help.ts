@@ -33,6 +33,8 @@ COMMANDS:
     
   verify --proof <path>      Verify proof locally
   
+  export-vk                  Extract UltraHonk verification key from circuit
+  
   status                     Show project state
 
 EXAMPLES:

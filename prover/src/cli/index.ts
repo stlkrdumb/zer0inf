@@ -16,6 +16,7 @@ import { cmdVerify } from './commands/verify.js';
 import { cmdSubmit } from './commands/submit.js';
 import { cmdDeploy } from './commands/deploy.js';
 import { cmdStatus } from './commands/status.js';
+import { cmdExportVK } from './commands/export-vk.js';
 
 // ── CLI Argument Parsing ───────────────────────────────────────────
 
@@ -64,6 +65,7 @@ async function main(): Promise<void> {
     case 'infer':    await cmdInfer(args); break;
     case 'verify':   await cmdVerify(args); break;
     case 'submit':   await cmdSubmit(args); break;
+    case 'export-vk': await cmdExportVK(args); break;
     case 'status':   await cmdStatus(); break;
     default:
       console.error(`Unknown command: ${args.command}`);

@@ -1,16 +1,18 @@
 /**
- * Zer0Inf — Export Verification Key from Noir Circuit
+ * Zer0Inf — export-vk Command
  * 
- * Uses bb.js to extract the UltraHonk verification key for on-chain verifier.
+ * Extracts the UltraHonk verification key from the Noir circuit using bb.js.
+ * Saves to output/verification_key.bin and output/verification_key.hex
  */
 
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import crypto from 'node:crypto';
+import type { CLIArgs } from '../index.js';
 
 // Resolve project root (same logic as generate.ts)
 function getProjectRoot(): string {
-  const modDir = dirname(new URL(import.meta.url).pathname);
+  const modDir = dirname(new URL(import.meta.url).pathname.replace(/^\//, ''));
   const candidate = join(modDir, '../..', '..');
   if (existsSync(join(candidate, 'circuit', 'Nargo.toml'))) {
     return candidate;
@@ -18,7 +20,7 @@ function getProjectRoot(): string {
   return process.cwd();
 }
 
-async function main() {
+export async function cmdExportVK(args: CLIArgs): Promise<void> {
   const PROJECT_ROOT = getProjectRoot();
   const CIRCUIT_DIR = join(PROJECT_ROOT, 'circuit');
   const TARGET_DIR = join(CIRCUIT_DIR, 'target');
@@ -68,12 +70,5 @@ async function main() {
   console.log(`[zer0inf] VK saved to output/verification_key.bin (${vk.length} bytes)`);
   console.log(`[zer0inf] VK hex saved to output/verification_key.hex`);
   console.log(`[zer0inf] VK hash: ${crypto.createHash('sha256').update(Buffer.from(vk)).digest('hex').slice(0, 16)}...`);
-
-  // Print first few bytes for verification
   console.log(`[zer0inf] First 32 bytes (hex): ${vkHex.slice(0, 64)}`);
 }
-
-main().catch(err => {
-  console.error('[zer0inf] VK export failed:', err instanceof Error ? err.message : String(err));
-  process.exit(1);
-});
