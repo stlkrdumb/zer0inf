@@ -8,7 +8,7 @@ import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import crypto from 'node:crypto';
 import { Networks, Keypair, contract } from '@stellar/stellar-sdk';
-import { DEFAULT_RPC_URL, DEFAULT_HORIZON_URL } from '../types/index.js';
+import { DEFAULT_RPC_URL, DEFAULT_HORIZON_URL, STELLAR_NETWORKS } from '../types/index.js';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -16,6 +16,7 @@ export interface OnchainConfig {
   secret: string;
   contractId?: string;
   rpcUrl?: string;
+  networkPassphrase?: string;
 }
 
 export interface SubmitResult {
@@ -51,12 +52,22 @@ export function getConfig(opts?: {
   secret?: string;
   contractId?: string;
   rpcUrl?: string;
+  networkPassphrase?: string;
 }): OnchainConfig {
   loadEnv();
+  const secret = opts?.secret || process.env.STELLAR_SECRET || '';
+  if (!secret) {
+    throw new Error(
+      '[zer0inf] Missing Stellar secret key.\n' +
+      '  Set STELLAR_SECRET in .env or pass --secret <key>.\n' +
+      '  Get a testnet key: https://laboratory.stellar.org/'
+    );
+  }
   return {
-    secret: opts?.secret || process.env.STELLAR_SECRET || '',
+    secret,
     contractId: opts?.contractId || process.env.STELLAR_CONTRACT_ID || '',
     rpcUrl: opts?.rpcUrl || process.env.STELLAR_RPC || DEFAULT_RPC_URL,
+    networkPassphrase: opts?.networkPassphrase || STELLAR_NETWORKS.TESTNET.networkPassphrase,
   };
 }
 
@@ -69,11 +80,12 @@ export function getConfig(opts?: {
 async function createClient(config: OnchainConfig) {
   const { Client } = await import('../client/src/index.js');
   const kp = Keypair.fromSecret(config.secret);
-  const { signTransaction } = contract.basicNodeSigner(kp, Networks.TESTNET);
+  const networkPassphrase = config.networkPassphrase || Networks.TESTNET;
+  const { signTransaction } = contract.basicNodeSigner(kp, networkPassphrase);
 
   return new Client({
     contractId: config.contractId!,
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase,
     rpcUrl: config.rpcUrl || DEFAULT_RPC_URL,
     publicKey: kp.publicKey(),
     signTransaction,
@@ -125,7 +137,8 @@ export async function registerModel(
 export async function submitInference(
   config: OnchainConfig,
   modelId: number,
-  proofHash: Buffer,
+  proofBytes: Buffer,
+  publicInputs: Buffer,
   decision: boolean,
   confidence: number,
 ): Promise<SubmitResult> {
@@ -141,7 +154,8 @@ export async function submitInference(
   const tx = await client.submit_inference({
     caller: submitKp.publicKey(),
     model_id: modelId,
-    proof_hash: proofHash,
+    proof_bytes: proofBytes,
+    public_inputs: publicInputs,
     decision,
     confidence,
   });

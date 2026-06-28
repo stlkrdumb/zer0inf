@@ -46,7 +46,7 @@ export async function cmdInfer(args: CLIArgs): Promise<void> {
       modelId: 0,
       weightsHash,
       proofBytesHex,
-      publicInputs: publicInputs.map(v => v.toString()),
+      publicInputs,
       result,
     });
 

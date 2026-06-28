@@ -96,33 +96,31 @@ export interface ProofSubmission {
 
 // ── Stellar Configuration ──────────────────────────────────────────
 
-export interface StellarConfig {
+/** Network configuration for a Stellar network. */
+export interface StellarNetworkConfig {
   /** Network RPC URL */
   rpcUrl: string;
   /** Horizon API URL */
   horizonUrl: string;
   /** Network passphrase (testnet or futurenet) */
   networkPassphrase: string;
+}
+
+/** Soroban contract configuration. */
+export interface StellarConfig {
   /** Soroban contract ID for the Zer0Inf verifier */
   contractId?: string;
 }
 
-export const TESTNET: StellarConfig = {
-  rpcUrl: 'https://soroban-testnet.stellar.org',
-  horizonUrl: 'https://testnet.stellar.org',
-  networkPassphrase: 'Test SDF Network ; September 2015',
-};
-
-// ── Centralized Stellar Config ───────────────────────────────────────
-/** Single source of truth for network URLs. Add new networks here.
- *  Usage: DEFAULT_RPC_URL, DEFAULT_HORIZON_URL from elsewhere.
- */
-export const STELLAR_CONFIG = {
+/** All supported Stellar networks. Add new networks here. */
+export const STELLAR_NETWORKS = {
   TESTNET: {
     rpcUrl: 'https://soroban-testnet.stellar.org',
     horizonUrl: 'https://testnet.stellar.org',
-  },
+    networkPassphrase: 'Test SDF Network ; September 2015',
+  } satisfies StellarNetworkConfig,
 } as const;
 
-export const DEFAULT_RPC_URL = STELLAR_CONFIG.TESTNET.rpcUrl;
-export const DEFAULT_HORIZON_URL = STELLAR_CONFIG.TESTNET.horizonUrl;
+export const DEFAULT_RPC_URL = STELLAR_NETWORKS.TESTNET.rpcUrl;
+export const DEFAULT_HORIZON_URL = STELLAR_NETWORKS.TESTNET.horizonUrl;
+export const DEFAULT_NETWORK_PASSPHRASE = STELLAR_NETWORKS.TESTNET.networkPassphrase;

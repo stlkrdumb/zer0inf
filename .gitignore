@@ -24,12 +24,17 @@ Thumbs.db
 
 # Proof artifacts (large binary files)
 *.bin
+*.hex
 *.pk
 *.vk
 
 # Runtime outputs
 output/*.json
 output/*.txt
+output/*.hex
+
+# Prover outputs (generated during inference)
+prover/output/
 
 # Test scripts (temporary)
 deploy-*.cjs

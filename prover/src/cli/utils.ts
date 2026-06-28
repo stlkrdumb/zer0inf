@@ -26,7 +26,7 @@ export function saveJSON<T>(path: string, data: T): void {
   const dir = dirname(path);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   const jsonStr = JSON.stringify(data, (key, value) =>
-    typeof value === 'bigint' ? value.toString() + 'n' : value,
+    typeof value === 'bigint' ? value.toString() : value,
     2
   );
   writeFileSync(path, jsonStr);

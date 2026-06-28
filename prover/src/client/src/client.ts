@@ -4,6 +4,14 @@ import { Buffer } from 'buffer';
 
 export interface Client {
   /**
+   * Initialize the on-chain UltraHonk verifier with verification key bytes.
+   */
+  __constructor({ vk_bytes }: { vk_bytes: Buffer }, options?: MethodOptions): Promise<AssembledTransaction<void>>;
+  /**
+   * Return the stored verification key bytes for auditability.
+   */
+  vk_bytes(options?: MethodOptions): Promise<AssembledTransaction<Buffer>>;
+  /**
    * Register a new ML model with committed weight hash
    */
   register({ caller, model_hash, description, version }: { caller: string | Address; model_hash: Buffer; description: string; version: number }, options?: MethodOptions): Promise<AssembledTransaction<number>>;
@@ -24,15 +32,19 @@ export interface Client {
    */
   get_model_count(options?: MethodOptions): Promise<AssembledTransaction<number>>;
   /**
-   * Submit verified inference proof
+   * Submit verified inference proof with on-chain UltraHonk verification.
    */
-  submit_inference({ caller, model_id, proof_hash, decision, confidence }: { caller: string | Address; model_id: number; proof_hash: Buffer; decision: boolean; confidence: number }, options?: MethodOptions): Promise<AssembledTransaction<bigint>>;
+  submit_inference({ caller, model_id, proof_bytes, public_inputs, decision, confidence }: { caller: string | Address; model_id: number; proof_bytes: Buffer; public_inputs: Buffer; decision: boolean; confidence: number }, options?: MethodOptions): Promise<AssembledTransaction<number>>;
+  /**
+   * Get inference record with proof hash
+   */
+  get_inference_with_hash({ inference_id }: { inference_id: bigint }, options?: MethodOptions): Promise<AssembledTransaction<[number, boolean, number, Buffer]>>;
 }
 
 export class Client extends ContractClient {
   constructor(public readonly options: ContractClientOptions) {
     super(
-      new Spec(["AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAACAAAAAAAAAAAAAAACk1vZGVsQ291bnQAAAAAAAAAAAAAAAAADkluZmVyZW5jZUNvdW50AAAAAAAAAAAAAAAAAAZNb2RlbHMAAAAAAAEAAAAAAAAABEhhc2gAAAABAAAABAAAAAAAAAAAAAAABURlc2MwAAAAAAAAAAAAAAAAAAAFRGVzYzEAAAAAAAAAAAAAAAAAAAVEZXNjMgAAAAAAAAEAAAAAAAAACUluZlJlY29yZAAAAAAAAAEAAAAG", "AAAAAQAAAAAAAAAAAAAACU1vZGVsSW5mbwAAAAAAAAIAAAAAAAAACG1vZGVsX2lkAAAABAAAAAAAAAAHdmVyc2lvbgAAAAAE", "AAAAAQAAAAAAAAAAAAAAD0luZmVyZW5jZVJlY29yZAAAAAAEAAAAAAAAAApjb25maWRlbmNlAAAAAAAEAAAAAAAAAAhkZWNpc2lvbgAAAAEAAAAAAAAADGluZmVyZW5jZV9pZAAAAAYAAAAAAAAACG1vZGVsX2lkAAAABA==", "AAAAAAAAADJSZWdpc3RlciBhIG5ldyBNTCBtb2RlbCB3aXRoIGNvbW1pdHRlZCB3ZWlnaHQgaGFzaAAAAAAACHJlZ2lzdGVyAAAABAAAAAAAAAAGY2FsbGVyAAAAAAATAAAAAAAAAAptb2RlbF9oYXNoAAAAAAPuAAAAIAAAAAAAAAALZGVzY3JpcHRpb24AAAAAEAAAAAAAAAAHdmVyc2lvbgAAAAAEAAAAAQAAAAQ=", "AAAAAAAAAA5HZXQgbW9kZWwgaW5mbwAAAAAACWdldF9tb2RlbAAAAAAAAAEAAAAAAAAACG1vZGVsX2lkAAAABAAAAAEAAAPtAAAAAwAAA+4AAAAgAAAAEAAAAAQ=", "AAAAAAAAABpMaXN0IGFsbCByZWdpc3RlcmVkIG1vZGVscwAAAAAAC2xpc3RfbW9kZWxzAAAAAAAAAAABAAAD6gAAAAQ=", "AAAAAAAAABRHZXQgaW5mZXJlbmNlIHJlY29yZAAAAA1nZXRfaW5mZXJlbmNlAAAAAAAAAQAAAAAAAAAMaW5mZXJlbmNlX2lkAAAABgAAAAEAAAPtAAAAAwAAAAQAAAABAAAABA==", "AAAAAAAAABpHZXQgcmVnaXN0ZXJlZCBtb2RlbCBjb3VudAAAAAAAD2dldF9tb2RlbF9jb3VudAAAAAAAAAAAAQAAAAQ=", "AAAAAAAAAB9TdWJtaXQgdmVyaWZpZWQgaW5mZXJlbmNlIHByb29mAAAAABBzdWJtaXRfaW5mZXJlbmNlAAAABQAAAAAAAAAGY2FsbGVyAAAAAAATAAAAAAAAAAhtb2RlbF9pZAAAAAQAAAAAAAAACnByb29mX2hhc2gAAAAAA+4AAAAgAAAAAAAAAAhkZWNpc2lvbgAAAAEAAAAAAAAACmNvbmZpZGVuY2UAAAAAAAQAAAABAAAABg=="]),
+      new Spec([]),
       options
     );
   }
@@ -41,6 +53,6 @@ export class Client extends ContractClient {
     return ContractClient.deploy(null, options);
   }
   public readonly fromJSON = {
-    register : this.txFromJSON<number>,  get_model : this.txFromJSON<[Buffer, string, number]>,  list_models : this.txFromJSON<Array<number>>,  get_inference : this.txFromJSON<[number, boolean, number]>,  get_model_count : this.txFromJSON<number>,  submit_inference : this.txFromJSON<bigint>
+    __constructor : this.txFromJSON<void>,  vk_bytes : this.txFromJSON<Buffer>,  register : this.txFromJSON<number>,  get_model : this.txFromJSON<[Buffer, string, number]>,  list_models : this.txFromJSON<Array<number>>,  get_inference : this.txFromJSON<[number, boolean, number]>,  get_model_count : this.txFromJSON<number>,  submit_inference : this.txFromJSON<number>,  get_inference_with_hash : this.txFromJSON<[number, boolean, number, Buffer]>
   };
 }

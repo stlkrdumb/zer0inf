@@ -54,15 +54,24 @@ export async function cmdSubmit(args: CLIArgs): Promise<void> {
 
   console.log('[zer0inf] Submitting inference to Soroban contract...\n');
 
-  try {
-    const proofHash = submission.proofBytesHex.length > 0
-      ? crypto.createHash('sha256').update(Buffer.from(submission.proofBytesHex, 'hex')).digest()
-      : undefined;
+  // Reconstruct proof bytes and public inputs from saved data
+  const proofBytes = submission.proofBytesHex.length > 0
+    ? Buffer.from(submission.proofBytesHex, 'hex')
+    : Buffer.alloc(0);
+  
+  // Convert public inputs to byte representation
+  const publicInputValues = (submission.publicInputs || []).map((v: any) => {
+    // Handle both BigInt and number types from JSON
+    const val = typeof v === 'bigint' ? v : BigInt(v);
+    return Number(val & 0xffn); // Pack lowest byte
+  });
+  const publicInputs = Buffer.from(publicInputValues);
 
+  try {
     const resultData = await submitInference({
       secret: opts['secret'] as string,
       contractId,
-    }, submission.modelId, proofHash || Buffer.alloc(32), decision, confidenceVal);
+    }, submission.modelId, proofBytes, publicInputs, decision, confidenceVal);
 
     // Save contract ID for future calls
     const idPath = join(process.cwd(), 'output', 'contract-id.txt');

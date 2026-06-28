@@ -108,13 +108,41 @@ async function ensureCompiled(nargoBin?: string): Promise<void> {
 
 // ── Proof Generation ───────────────────────────────────────────────
 
+/** Cached bb.js backend instance for reuse across proof generations */
+let cachedBackend: any = null;
+let cachedBytecode: string | null = null;
+
+/**
+ * Get or create a cached UltraHonkBackend instance.
+ * Reuses the same Barretenberg WASM instance across multiple proof calls.
+ */
+async function getCachedBackend(bytecode: string) {
+  if (cachedBackend && cachedBytecode === bytecode) {
+    return cachedBackend;
+  }
+
+  console.log('[zer0inf] Initializing Barretenberg (≈10s warmup)...');
+  const bb = await import('@aztec/bb.js');
+  const Barretenberg = bb.Barretenberg;
+  const UltraHonkBackend = bb.UltraHonkBackend;
+
+  const barretenbergAPI = await Barretenberg.new();
+  const backend = new UltraHonkBackend(bytecode, barretenbergAPI as any);
+
+  // Cache for reuse
+  cachedBackend = backend;
+  cachedBytecode = bytecode;
+
+  return backend;
+}
+
 /**
  * Generate an UltraHonk ZK proof via noir_js + Barretenberg.
  * 
  * Flow:
  *   1. Load compiled Noir circuit JSON
  *   2. Build & execute witness → verify constraints
- *   3. Generate UltraHonk proof using Barretenberg backend
+ *   3. Generate UltraHonk proof using Barretenberg backend (cached)
  *   4. Verify proof locally
  */
 export async function generateProof(
@@ -224,15 +252,8 @@ export async function generateProof(
   const { witness } = await noir.execute(witnessInputs);
   console.log('[zer0inf] Witness generated ✓');
 
-  // Barretenberg backend for UltraHonk
-  console.log('[zer0inf] Initializing Barretenberg (≈10s)...');
-  // bb.js is hoisted to root workspace node_modules
-  const bb = await import('@aztec/bb.js');
-  const Barretenberg = bb.Barretenberg;
-  const UltraHonkBackend = bb.UltraHonkBackend;
-
-  const barretenbergAPI = await Barretenberg.new();
-  const backend = new UltraHonkBackend(rawCircuit.bytecode, barretenbergAPI as any);
+  // Barretenberg backend for UltraHonk (cached across calls)
+  const backend = await getCachedBackend(rawCircuit.bytecode);
 
   console.log('[zer0inf] Generating UltraHonk proof...');
   const t0 = Date.now();

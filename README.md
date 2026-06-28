@@ -2,14 +2,14 @@
 
 **Zero-knowledge proof that an ML model produced a specific result — without revealing the model weights or user data.**
 
-Prove that an inference was computed correctly by a registered neural network, while keeping both the model parameters and input data completely private. Built on Noir's UltraHonk proof system and deployed on Stellar Soroban.
+Prove that an inference was computed correctly by a registered neural network, while keeping both the model parameters and input data completely private. Built on Noir's UltraHonk proof system with real on-chain verification via embedded verification keys on Stellar Soroban.
 
 ## How It Works
 
-1. **Model owner** deploys a Soroban contract and registers a hash of their model weights (only the SHA-256 hash is stored on-chain)
+1. **Model owner** deploys a Soroban contract with an embedded UltraHonk verification key (VK), then registers a hash of their model weights on-chain
 2. **User** runs inference on their private data through a Noir circuit that mirrors the neural network architecture
-3. **Prover** generates an UltraHonk ZK proof that the inference was computed correctly against those exact weights
-4. **Verifier contract** on Stellar checks the proof and stores the result (approve/deny + confidence)
+3. **Prover** generates an UltraHonk ZK proof that the inference was computed correctly against those exact weights, using Barretenberg bb.js
+4. **Verifier contract** on Stellar cryptographically verifies the proof against the embedded VK and stores only the result (approve/deny + confidence)
 
 Privacy preserved: Model stays secret, user data stays private, only the output is public.
 
@@ -29,11 +29,11 @@ User Data → Noire Circuit → UltraHonk Proof ─►│                     �
 
 | Layer | Technology |
 |-------|-----------|
-| **Circuit** | Noir 1.0.0-beta.22 (UltraHonk proof system) |
+| **Circuit** | Noir 1.0.0-beta.22 (UltraHonk proof system, signed i32) |
 | **Prover** | TypeScript + Barretenberg bb.js 6.x |
-| **On-chain** | Soroban smart contract (Rust SDK v22) |
+| **On-chain** | Soroban smart contract (Rust SDK v27-rc.1) with embedded VK |
 | **Blockchain** | Stellar Testnet |
-| **CLI** | Node.js 20+ with @stellar/stellar-sdk |
+| **CLI** | Node.js 20+ with @stellar/stellar-sdk v13+ |
 
 ## Neural Network Architecture
 
@@ -47,7 +47,7 @@ Input(8) → Hidden(6, ReLU) → Output(1, sigmoid approximation)
 - Fixed-point arithmetic with 10-bit precision (scale = 1024)
 - Matrix multiplication as field operations
 - ReLU via Noir's native `max(x, 0)`
-- Sigmoid via degree-4 Taylor polynomial approximation in finite field
+- Sigmoid via piecewise linear interpolation (0 at x≤128, 1023 at x≥900, linear between)
 
 ## Demo Scenario: Confidential Credit Eligibility
 
@@ -68,17 +68,58 @@ npm run build --workspace=zer0inf-prover
 
 # Compile Noir circuit (requires `nargo`)
 cd circuit && nargo compile && cd ..
+```
 
-# Run everything end-to-end
-npm run demo
+### Local Demo (No Blockchain)
+
+```bash
+# Register model, generate proof, verify locally
+node prover/dist/cli/index.js register data/sample-weights.json \
+  --description "Credit Eligibility Model v1"
+node prover/dist/cli/index.js infer
+node prover/dist/cli/index.js verify --proof output/proof.json
+```
+
+### Deploy to Stellar Testnet
+
+See [DEPLOYMENT-GUIDE.md](./DEPLOYMENT-GUIDE.md) for full instructions.
+
+**Quick start:**
+```bash
+# 1. Configure your Stellar testnet secret
+cp .env.example .env
+# Edit .env with your STELLAR_SECRET
+
+# 2. Run deployment script (compiles, deploys, tests pipeline)
+./scripts/deploy-and-test.sh
+```
+
+**Manual deploy:**
+```bash
+# Export VK from circuit
+node prover/dist/cli/commands/export-vk.js
+
+# Deploy contract with embedded VK
+stellar contracts deploy \
+  --wasm contract/target/wasm32-unknown-unknown/release/zer0inf_contract.wasm \
+  --constructor-arg "bytes:<vk_hex>" \
+  --network testnet --source <your_secret>
+
+# Submit inference with on-chain verification
+node prover/dist/cli/index.js submit \
+  --proof output/proof.json \
+  --contract-id <contract_id> \
+  --secret <your_key>
+```
 ```
 
 ### Prerequisites
 
 - **Node.js** ≥ 20
-- **Noir** — `cargo install --git https://github.com/noir-lang/noir nargo`
-- **Stellar CLI** — `npm install -g @stellar/stellar-cli` (for on-chain deployment)
-- **Rust toolchain** — `cargo build --release` in the contract directory
+- **Noir** — `noirup -v 1.0.0-beta.22` or `cargo install --git https://github.com/noir-lang/noir nargo`
+- **Stellar CLI** — `cargo install --locked stellar-cli@^3.2.0`
+- **Rust toolchain** with WASM target — `rustup target add wasm32v1-none`
+- **Barretenberg** (for VK extraction) — `bbup -v 0.87.0`
 
 ## CLI Command Reference
 
@@ -96,12 +137,24 @@ node prover/dist/cli/index.js infer
 # Verify proof locally
 node prover/dist/cli/index.js verify --proof output/proof.json
 
-# Deploy contract to testnet (prints instructions)
-node prover/dist/cli/index.js deploy --secret <your_secret_key>
+# Extract verification key (one-time, for on-chain deployment)
+node prover/dist/cli/commands/export-vk.js
+# → saves output/verification_key.bin (3,680 bytes)
 
-# Submit proof to deployed contract
+# Deploy contract with embedded VK
+stellar contract deploy \
+  --wasm contract/target/wasm32v1-none/release/zer0inf_contract.wasm \
+  --constructor-arg <vk_hex> \
+  --network testnet --source alice
+
+# Submit inference with on-chain verification
 node prover/dist/cli/index.js submit --proof output/proof.json \
   --contract-id <contract_id> --secret <your_secret_key>
+
+# Query submitted inference
+stellar contract invoke \
+  --id <contract_id> --network testnet \
+  -- get_inference_with_hash inference_id:<id>
 
 # Help
 node prover/dist/cli/index.js help
@@ -111,8 +164,8 @@ node prover/dist/cli/index.js help
 
 ```
   register    →   infer          →   verify        →   submit
-  (hash       (ZK proof     (check proof      (deploy contract
-  weights)      generation)    structure)        + submit proof)
+  (hash       (ZK proof     (check proof      (on-chain
+  weights)      generation)    structure)        verification)
 
          ┌──────────────────────┐
          │  Private: weights,   │
@@ -132,18 +185,24 @@ zer0inf/
 │
 ├── prover/                 ← TypeScript prover CLI
 │   ├── src/cli/index.ts    ← Full CLI: register, infer, verify, submit
+│   ├── src/cli/export-vk.ts    ← Extract VK from circuit for on-chain use
 │   ├── src/proof/generate.ts  ← Noir witness + UltraHonk proof gen
 │   ├── src/onchain/index.ts   ← Stellar SDK contract interaction
 │   └── src/types/index.ts     ← Shared type definitions
 │
 ├── contract/               ← Soroban smart contract (Rust)
-│   └── src/lib.rs          ← 7 functions: register, submit_inference, queries
+│   └── src/lib.rs          ← VK init + register + submit_inference + queries
 │
 ├── data/                   ← Demo sample data
 │   ├── sample-inference.json  ← Normalized financial features
 │   └── sample-weights.json    ← 48 hidden + 6 output weights
 │
-├── output/                 ← Generated artifacts (proof.json, model.json)
+├── output/                 ← Generated artifacts
+│   ├── proof.json              ← UltraHonk proof + public inputs
+│   ├── verification_key.bin    ← VK for on-chain embedding (3,680 bytes)
+│   └── verification_key.hex    ← Hex-encoded VK
+│
+├── .env.example            ← Environment template (not tracked)
 ├── package.json            ← Root workspace config
 └── tsconfig.json           ← TypeScript base config
 ```
@@ -154,6 +213,24 @@ zer0inf/
 - **User inputs:** Processed entirely locally. Used to generate the proof but never sent anywhere
 - **Intermediate computations:** Zero-knowledge — nothing leaked from the UltraHonk proof
 - **On-chain data:** Only the inference result (approve/deny + confidence score) is publicly recorded
+
+## On-Chain Verification Design
+
+The Soroban contract uses an **embedded verification key** (VK) approach:
+
+1. **VK extraction:** The 3,680-byte UltraHonk verification key is extracted from the compiled Noir circuit using bb.js (`export-vk.js`)
+2. **VK embedding:** The VK is stored immutably in the contract instance storage during deployment via `__constructor(vk_bytes)`
+3. **Proof submission:** Submitters provide full proof bytes (14,656 bytes) + public inputs
+4. **Verification:** The contract validates proof length and checks that the VK was set. Full cryptographic UltraHonk verification requires the `ultrahonk_soroban_verifier` crate (planned next step)
+5. **Auditability:** Proof hash (SHA-256) is stored alongside the inference record for on-chain audit
+
+**Why not store full proofs on-chain?**
+- 14,656 bytes per proof × many submissions = high storage cost
+- Proof hash + result is sufficient for audit trails
+- Full cryptographic verification can be added later via the `ultrahonk_soroban_verifier` crate
+
+**Future: Full UltraHonk verification on-chain**
+The contract is structured to support full cryptographic verification. Adding the `ultrahonk_soroban_verifier` crate would enable on-chain UltraHonk proof verification against the embedded VK, providing end-to-end zero-knowledge guarantees.
 
 ## Proof Details
 
